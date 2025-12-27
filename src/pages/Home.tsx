@@ -1,0 +1,85 @@
+import React, { useEffect, useState, useCallback } from 'react';
+import { fetchNews } from '../api/news';
+import { NewsItem } from '../types/news';
+import { NewsList } from '../components/NewsList';
+import { Loader2 } from 'lucide-react';
+
+export const Home: React.FC = () => {
+  const [news, setNews] = useState<NewsItem[]>([]);
+  const [page, setPage] = useState(1);
+  const [loading, setLoading] = useState(false);
+  const [hasMore, setHasMore] = useState(true);
+
+  const loadNews = useCallback(async (pageNum: number) => {
+    if (loading) return;
+    setLoading(true);
+    try {
+      const newNews = await fetchNews(pageNum);
+      if (newNews.length === 0) {
+        setHasMore(false);
+      } else {
+        setNews(prev => {
+            // Filter out duplicates just in case, though our mock logic generates unique IDs
+            const existingIds = new Set(prev.map(n => n.id));
+            const uniqueNewNews = newNews.filter(n => !existingIds.has(n.id));
+            return [...prev, ...uniqueNewNews];
+        });
+      }
+    } catch (error) {
+      console.error("Failed to fetch news", error);
+    } finally {
+      setLoading(false);
+    }
+  }, [loading]);
+
+  useEffect(() => {
+    loadNews(1);
+  }, []); // Initial load
+
+  // Infinite scroll handler
+  useEffect(() => {
+    const handleScroll = () => {
+      if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || loading || !hasMore) {
+        return;
+      }
+      setPage(prev => {
+        const nextPage = prev + 1;
+        loadNews(nextPage);
+        return nextPage;
+      });
+    };
+
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [loading, hasMore, loadNews]);
+
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8 text-center">
+        <h2 className="text-3xl font-bold text-gray-800 mb-4"> أحدث الأخبار</h2>
+        <div className="flex flex-col">
+            <p className="text-lg md:text-xl font-bold leading-tight">
+              شركة مياه الشرب والصرف الصحى
+
+            
+              بأسيوط والوادى الجديد
+            </p>
+          </div>
+      </div>
+
+      <NewsList news={news} />
+
+      {loading && (
+        <div className="flex justify-center items-center py-8">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+        </div>
+      )}
+
+      {!hasMore && news.length > 0 && (
+        <div className="text-center py-8 text-gray-500">
+          وصلت إلى نهاية الأخبار
+        </div>
+      )}
+    </div>
+  );
+};
