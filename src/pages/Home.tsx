@@ -39,14 +39,20 @@ export const Home: React.FC = () => {
   // Infinite scroll handler
   useEffect(() => {
     const handleScroll = () => {
-      if (window.innerHeight + document.documentElement.scrollTop !== document.documentElement.offsetHeight || loading || !hasMore) {
-        return;
+      // Use more robust scroll calculation for mobile
+      const scrollTop = window.scrollY || document.documentElement.scrollTop || document.body.scrollTop;
+      const scrollHeight = document.documentElement.scrollHeight || document.body.scrollHeight;
+      const clientHeight = window.innerHeight || document.documentElement.clientHeight;
+
+      // Trigger when user is within 200px of the bottom (increased threshold for mobile)
+      // Using >= instead of === to handle fractional pixels and overscroll
+      if (scrollTop + clientHeight >= scrollHeight - 200 && !loading && hasMore) {
+        setPage(prev => {
+          const nextPage = prev + 1;
+          loadNews(nextPage);
+          return nextPage;
+        });
       }
-      setPage(prev => {
-        const nextPage = prev + 1;
-        loadNews(nextPage);
-        return nextPage;
-      });
     };
 
     window.addEventListener('scroll', handleScroll);
