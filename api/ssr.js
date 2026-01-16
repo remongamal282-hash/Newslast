@@ -115,11 +115,11 @@ export default async function handler(request, response) {
                 <meta property="og:title" content="${meta.title}" />
                 <meta property="og:description" content="${meta.description.replace(/"/g, '&quot;')}" />
                 <meta property="og:image" content="${meta.image}" />
-                <script>window.location.href = "/news/${id}";</script>
+                <script>window.location.href = "/?redirect=/news/${id}";</script>
             </head>
             <body>
                 <h1>جاري التحويل...</h1>
-                <p><a href="/news/${id}">اضغط هنا إذا لم يتم التحويل تلقائياً</a></p>
+                <p><a href="/?redirect=/news/${id}">اضغط هنا إذا لم يتم التحويل تلقائياً</a></p>
             </body>
             </html>
         `;
