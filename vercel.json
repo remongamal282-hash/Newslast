@@ -2,6 +2,10 @@
     "cleanUrls": true,
     "rewrites": [
         {
+            "source": "/api/proxy/:path*",
+            "destination": "https://backend.ascww.org/api/:path*"
+        },
+        {
             "source": "/news/:id",
             "destination": "/api/ssr?id=:id"
         },
