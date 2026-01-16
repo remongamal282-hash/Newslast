@@ -4,30 +4,35 @@ export default async function handler(request, response) {
     // Configuration
     const API_URL = 'https://backend.ascww.org/api/news';
     const IMAGE_BASE_URL = 'https://backend.ascww.org/api/news/image/';
-    const SITE_URL = 'https://' + process.env.VERCEL_URL; // VERCEL_URL is domain without protocol
+    const PROD_SITE_URL = 'https://' + process.env.VERCEL_URL;
+    const SITE_URL = process.env.VERCEL_URL ? PROD_SITE_URL : 'http://localhost:3000';
 
     // Default Meta Data
     const defaultMeta = {
         title: "شركة مياه الشرب والصرف الصحي بأسيوط والوادي الجديد",
         description: "الموقع الرسمي لشركة مياه الشرب والصرف الصحي بأسيوط والوادي الجديد - تابع أحدث الأخبار والخدمات",
-        image: `${SITE_URL}/logo.png`, // Assuming logo.png is in public folder. If not, use a different default.
+        image: `${SITE_URL}/logo.png`,
         url: SITE_URL
     };
 
     try {
         // 1. Fetch News Data
-        // We fetch the full list because the API doesn't support single item by ID publicly (as per client code analysis)
-        const apiRes = await fetch(API_URL);
-        if (!apiRes.ok) throw new Error('Failed to fetch news data');
-        const newsList = await apiRes.json();
+        const apiRes = await fetch(API_URL, {
+            headers: { 'User-Agent': 'Vercel-SSR-Function' }
+        });
 
-        // Find the specific news item
-        const newsItem = newsList.find(item => item.id == id);
+        let newsItem = null;
+        if (apiRes.ok) {
+            const newsList = await apiRes.json();
+            newsItem = newsList.find(item => item.id == id);
+        } else {
+            console.error('Failed to fetch news data:', apiRes.status);
+        }
 
         // Prepare Meta Data
         const meta = newsItem ? {
             title: newsItem.title,
-            description: newsItem.description ? newsItem.description.substring(0, 200) : defaultMeta.description, // Truncate description
+            description: newsItem.description ? newsItem.description.substring(0, 200) : defaultMeta.description,
             image: newsItem.news_images && newsItem.news_images.length > 0
                 ? IMAGE_BASE_URL + (newsItem.news_images[0].path.startsWith('/') ? newsItem.news_images[0].path.slice(1) : newsItem.news_images[0].path)
                 : defaultMeta.image,
@@ -35,15 +40,18 @@ export default async function handler(request, response) {
         } : defaultMeta;
 
         // 2. Fetch the frontend's index.html
-        // We fetch it from our own deployment to get the correct hashed assets (JS/CSS)
-        // Note: We use the SITE_URL specific to this deployment
-        const indexRes = await fetch(`${SITE_URL}/index.html`);
-        if (!indexRes.ok) throw new Error('Failed to fetch index.html');
+        // Use a specific User-Agent to avoid self-referencing block issues on some platforms
+        const indexRes = await fetch(`${SITE_URL}/index.html`, {
+            headers: { 'User-Agent': 'Vercel-SSR-Function' }
+        });
+
+        if (!indexRes.ok) {
+            throw new Error(`Failed to fetch index.html: ${indexRes.status}`);
+        }
+
         let html = await indexRes.text();
 
         // 3. Inject Meta Tags
-        // We replace the <title> and inject Open Graph tags into the <head>
-
         // Replace Title
         html = html.replace(/<title>.*?<\/title>/, `<title>${meta.title}</title>`);
 
@@ -66,22 +74,31 @@ export default async function handler(request, response) {
 
         // 4. Return the Final HTML
         response.setHeader('Content-Type', 'text/html; charset=utf-8');
-        response.setHeader('Cache-Control', 's-maxage=1, stale-while-revalidate'); // Cache lightly
+        response.setHeader('Cache-Control', 's-maxage=1, stale-while-revalidate');
         return response.status(200).send(html);
 
     } catch (error) {
         console.error('SSR Error:', error);
-        // In case of error (e.g. API down), fallback to serving the plain index.html logic
-        // We can try to redirect to index.html or just return a basic "Not Found" if critical
-        // Ideally, we redirect to the client-side route so the client can handle the 404 UI
-        // But redirection changes URL.
-        // Better: Fetch index.html and return it without dynamic tags (or with defaults)
-        try {
-            const indexRes = await fetch(`${SITE_URL}/index.html`);
-            const html = await indexRes.text();
-            return response.status(200).send(html);
-        } catch (e) {
-            return response.status(500).send('Internal Server Error');
-        }
+
+        // Fallback: If we can't fetch index.html, return a basic HTML shell with the meta tags
+        // This ensures the link preview still works even if the full app render fails effectively
+        const fallbackHtml = `
+            <!DOCTYPE html>
+            <html lang="ar" dir="rtl">
+            <head>
+                <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                <title>${defaultMeta.title}</title>
+                <meta property="og:title" content="${defaultMeta.title}" />
+                <meta property="og:description" content="${defaultMeta.description}" />
+                <meta property="og:image" content="${defaultMeta.image}" />
+                <script>window.location.href = "/";</script>
+            </head>
+            <body>
+                <h1>Redirecting...</h1>
+            </body>
+            </html>
+        `;
+        return response.status(200).send(fallbackHtml);
     }
 }
