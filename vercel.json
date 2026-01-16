@@ -3,7 +3,7 @@
     "rewrites": [
         {
             "source": "/news/:id",
-            "destination": "/api/ssr"
+            "destination": "/api/ssr?id=:id"
         },
         {
             "source": "/(.*)",
