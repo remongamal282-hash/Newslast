@@ -5,7 +5,6 @@ export default async function handler(request, response) {
     const { id } = request.query;
 
     // Configuration
-    // Configuration
     const API_URL = 'https://backend.ascww.org/api/news';
     const IMAGE_BASE_URL = 'https://backend.ascww.org/api/news/image/';
     const PROD_SITE_URL = 'https://' + process.env.VERCEL_URL;
@@ -23,7 +22,6 @@ export default async function handler(request, response) {
 
     try {
         // 1. Fetch News Data
-        // We fetch early so we have the data for BOTH the happy path and the fallback path
         const apiRes = await fetch(API_URL, {
             headers: { 'User-Agent': 'Vercel-SSR-Function' }
         });
@@ -33,9 +31,17 @@ export default async function handler(request, response) {
             const newsItem = newsList.find(item => item.id == id);
 
             if (newsItem) {
+                // Clean description by stripping HTML tags
+                const rawDescription = newsItem.description || defaultMeta.description;
+                const cleanDescription = rawDescription
+                    .replace(/<[^>]*>/g, '') // Remove all HTML tags
+                    .replace(/&nbsp;/g, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+
                 meta = {
                     title: newsItem.title,
-                    description: newsItem.description ? newsItem.description.substring(0, 200) : defaultMeta.description,
+                    description: cleanDescription,
                     image: newsItem.news_images && newsItem.news_images.length > 0
                         ? IMAGE_BASE_URL + (newsItem.news_images[0].path.startsWith('/') ? newsItem.news_images[0].path.slice(1) : newsItem.news_images[0].path)
                         : defaultMeta.image,
@@ -50,13 +56,9 @@ export default async function handler(request, response) {
         }
 
         // 2. Try to get index.html
-        // Strategy A: Read from Filesystem (fastest, most reliable if path matches)
-        // Strategy B: Fetch from URL (fallback)
         let html = null;
 
         try {
-            // Vercel output structure often places index.html in the root or public
-            // However, in serverless functions, files must be explicitly included or are in process.cwd()
             const possiblePaths = [
                 path.join(process.cwd(), 'dist', 'index.html'),
                 path.join(process.cwd(), 'index.html'),
@@ -85,16 +87,29 @@ export default async function handler(request, response) {
         }
 
         // 3. Inject Meta Tags into real HTML
-        html = html.replace(/<title>.*?<\/title>/, `<title>${meta.title}</title>`);
+
+        // Clean description for safe injection
+        const safeDescription = meta.description
+            .substring(0, 200)
+            .replace(/"/g, '&quot;');
+
+        // Remove ALL existing meta tags to prevent duplicates
+        html = html.replace(/<title>.*?<\/title>/s, '');
+        html = html.replace(/<meta property="og:[^"]*"[^>]*>/g, '');
+        html = html.replace(/<meta name="twitter:[^"]*"[^>]*>/g, '');
+
+        // Inject fresh, clean tags
         const metaTags = `
+            <title>${meta.title}</title>
             <meta property="og:title" content="${meta.title}" />
-            <meta property="og:description" content="${meta.description.replace(/"/g, '&quot;')}" />
+            <meta property="og:description" content="${safeDescription}" />
             <meta property="og:image" content="${meta.image}" />
             <meta property="og:url" content="${meta.url}" />
             <meta property="og:type" content="article" />
+            <meta property="og:site_name" content="شركة مياه الشرب والصرف الصحي بأسيوط" />
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content="${meta.title}" />
-            <meta name="twitter:description" content="${meta.description.replace(/"/g, '&quot;')}" />
+            <meta name="twitter:description" content="${safeDescription}" />
             <meta name="twitter:image" content="${meta.image}" />`;
 
         html = html.replace('</head>', `${metaTags}</head>`);
@@ -106,9 +121,11 @@ export default async function handler(request, response) {
     } catch (error) {
         console.error('SSR Error:', error);
 
-        // 4. FALLBACK: Return a minimal HTML shell with the CORRECT META TAGS
-        // This ensures link sharing works even if the full app render fails effectively.
-        // The user will be redirected to the home page -> client router handles the rest.
+        // 4. FALLBACK: Return minimal HTML with correct meta tags
+        const safeDescription = meta.description
+            .substring(0, 200)
+            .replace(/"/g, '&quot;');
+
         const fallbackHtml = `
             <!DOCTYPE html>
             <html lang="ar" dir="rtl">
@@ -117,7 +134,7 @@ export default async function handler(request, response) {
                 <meta name="viewport" content="width=device-width, initial-scale=1.0">
                 <title>${meta.title}</title>
                 <meta property="og:title" content="${meta.title}" />
-                <meta property="og:description" content="${meta.description.replace(/"/g, '&quot;')}" />
+                <meta property="og:description" content="${safeDescription}" />
                 <meta property="og:image" content="${meta.image}" />
                 <script>window.location.href = "/?redirect=/news/${id}";</script>
             </head>
