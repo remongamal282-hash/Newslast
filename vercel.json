@@ -3,7 +3,7 @@
     "rewrites": [
         {
             "source": "/api/proxy/:path*",
-            "destination": "https://backend.ascww.org/api/:path*"
+            "destination": "http://backend.ascww.org/api/:path*"
         },
         {
             "source": "/news/:id",

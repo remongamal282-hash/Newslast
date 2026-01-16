@@ -5,8 +5,9 @@ export default async function handler(request, response) {
     const { id } = request.query;
 
     // Configuration
-    const API_URL = 'https://backend.ascww.org/api/news';
-    const IMAGE_BASE_URL = 'https://backend.ascww.org/api/news/image/';
+    // Configuration
+    const API_URL = 'http://backend.ascww.org/api/news';
+    const IMAGE_BASE_URL = 'http://backend.ascww.org/api/news/image/';
     const PROD_SITE_URL = 'https://' + process.env.VERCEL_URL;
     const SITE_URL = process.env.VERCEL_URL ? PROD_SITE_URL : 'http://localhost:3000';
 
