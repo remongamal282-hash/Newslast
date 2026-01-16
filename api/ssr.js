@@ -40,9 +40,12 @@ export default async function handler(request, response) {
                         : defaultMeta.image,
                     url: `${SITE_URL}/news/${id}`
                 };
+            } else {
+                meta.title = `News Not Found: ${id}`;
             }
         } else {
             console.error('Failed to fetch news data:', apiRes.status);
+            meta.title = `API Error: ${apiRes.status}`;
         }
 
         // 2. Try to get index.html
