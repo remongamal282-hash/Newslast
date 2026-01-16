@@ -1,6 +1,8 @@
 import { NewsItem, NewsImage } from '../types/news';
 
-const TARGET_URL = 'https://backend.ascww.org/api/news';
+// Use Vercel Proxy to avoid CORS
+const TARGET_URL = '/api/proxy';
+// const TARGET_URL = 'https://backend.ascww.org/api/news'; // OLD
 const IMAGE_BASE_URL = 'https://backend.ascww.org/api/news/image/';
 
 // List of proxies to try in order
@@ -90,7 +92,7 @@ export const fetchNews = async (page: number = 1): Promise<NewsItem[]> => {
     const newsItems: NewsItem[] = data.map(item => {
       const images = item.news_images || [];
       const mainImage = images.find(img => img.main_image === 1) || images[0];
-      
+
       return {
         id: item.id,
         title: item.title,
@@ -107,7 +109,7 @@ export const fetchNews = async (page: number = 1): Promise<NewsItem[]> => {
     const ITEMS_PER_PAGE = 6;
     const start = (page - 1) * ITEMS_PER_PAGE;
     const end = start + ITEMS_PER_PAGE;
-    
+
     return newsItems.slice(start, end);
 
   } catch (error) {
@@ -122,7 +124,7 @@ export const fetchNewsById = async (id: number): Promise<NewsItem | undefined> =
   try {
     const response = await fetchWithProxy(TARGET_URL);
     const data: ApiNewsItem[] = await response.json();
-    
+
     const item = data.find(n => n.id === id);
     if (!item) return undefined;
 

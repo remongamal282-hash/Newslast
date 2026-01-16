@@ -57,9 +57,9 @@ export default async function handler(request, response) {
             // Vercel output structure often places index.html in the root or public
             // However, in serverless functions, files must be explicitly included or are in process.cwd()
             const possiblePaths = [
+                path.join(process.cwd(), 'dist', 'index.html'),
                 path.join(process.cwd(), 'index.html'),
-                path.join(process.cwd(), 'public', 'index.html'),
-                path.join(process.cwd(), 'dist', 'index.html')
+                path.join(process.cwd(), 'public', 'index.html')
             ];
 
             for (const p of possiblePaths) {
