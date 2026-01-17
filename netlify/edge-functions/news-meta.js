@@ -44,17 +44,32 @@ export default async (request, context) => {
         // Replace Title
         html = html.replace(/<title>.*?<\/title>/, `<title>${meta.title}</title>`);
 
-        // Create Meta Tags Block
+        // Clean description
+        const cleanDesc = meta.description
+            .replace(/<[^>]*>/g, '') // Remove HTML tags
+            .replace(/&nbsp;/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+        const safeDescription = cleanDesc.substring(0, 200).replace(/"/g, '&quot;');
+
+        // Create Meta Tags Block with Facebook-required properties
         const metaTags = `
     <!-- Dynamic Social Tags -->
     <meta property="og:title" content="${meta.title}" />
-    <meta property="og:description" content="${meta.description.replace(/"/g, '&quot;')}" />
+    <meta property="og:description" content="${safeDescription}" />
     <meta property="og:image" content="${meta.image}" />
+    <meta property="og:image:secure_url" content="${meta.image}" />
+    <meta property="og:image:type" content="image/jpeg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="${meta.title}" />
     <meta property="og:url" content="${meta.url}" />
     <meta property="og:type" content="article" />
+    <meta property="og:site_name" content="شركة مياه الشرب والصرف الصحي بأسيوط" />
+    <meta property="og:locale" content="ar_AR" />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="${meta.title}" />
-    <meta name="twitter:description" content="${meta.description.replace(/"/g, '&quot;')}" />
+    <meta name="twitter:description" content="${safeDescription}" />
     <meta name="twitter:image" content="${meta.image}" />
     `;
 

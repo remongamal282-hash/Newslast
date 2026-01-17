@@ -98,15 +98,21 @@ export default async function handler(request, response) {
         html = html.replace(/<meta property="og:[^"]*"[^>]*>/g, '');
         html = html.replace(/<meta name="twitter:[^"]*"[^>]*>/g, '');
 
-        // Inject fresh, clean tags
+        // Inject fresh, clean tags with Facebook-required image properties
         const metaTags = `
             <title>${meta.title}</title>
             <meta property="og:title" content="${meta.title}" />
             <meta property="og:description" content="${safeDescription}" />
             <meta property="og:image" content="${meta.image}" />
+            <meta property="og:image:secure_url" content="${meta.image}" />
+            <meta property="og:image:type" content="image/jpeg" />
+            <meta property="og:image:width" content="1200" />
+            <meta property="og:image:height" content="630" />
+            <meta property="og:image:alt" content="${meta.title}" />
             <meta property="og:url" content="${meta.url}" />
             <meta property="og:type" content="article" />
             <meta property="og:site_name" content="شركة مياه الشرب والصرف الصحي بأسيوط" />
+            <meta property="og:locale" content="ar_AR" />
             <meta name="twitter:card" content="summary_large_image" />
             <meta name="twitter:title" content="${meta.title}" />
             <meta name="twitter:description" content="${safeDescription}" />
