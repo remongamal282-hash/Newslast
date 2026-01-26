@@ -2,13 +2,16 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { NewsItem } from '../types/news';
 import { getImageUrl } from '../api/news';
-import { Calendar, User, ArrowRight, Facebook, MessageCircle } from 'lucide-react';
+import { Calendar, User, ArrowRight, Facebook, MessageCircle, Volume2, X } from 'lucide-react';
+import { useSpeech } from '../hooks/useSpeech';
 
 interface NewsCardProps {
   article: NewsItem;
 }
 
 export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
+  const { speak, stop, isReading } = useSpeech();
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('ar-EG', {
       year: 'numeric',
@@ -37,6 +40,19 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
     e.stopPropagation();
     const text = `${article.title} ${articleUrl}`;
     window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
+  };
+
+  const handleReadArticle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const text = `${article.title}. ${stripHtml(article.content)}`;
+    speak(text, 'ar-SA');
+  };
+
+  const handleStopReading = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    stop();
   };
 
   return (
@@ -91,6 +107,23 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
             >
               <MessageCircle className="w-4 h-4" />
             </button>
+            {!isReading ? (
+              <button
+                onClick={handleReadArticle}
+                className="p-1.5 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"
+                title="اقرأ المقال"
+              >
+                <Volume2 className="w-4 h-4" />
+              </button>
+            ) : (
+              <button
+                onClick={handleStopReading}
+                className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                title="إيقاف القراءة"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
           </div>
           <Link 
             to={`/news/${article.id}`}

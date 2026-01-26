@@ -4,10 +4,11 @@ import { Helmet } from 'react-helmet-async';
 import { fetchNewsById } from '../api/news';
 import { NewsItem } from '../types/news';
 import { getImageUrl } from '../api/news';
-import { Calendar, User, ArrowRight, Loader2, Facebook, MessageCircle, Share2, ImageIcon, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar, User, ArrowRight, Loader2, Facebook, MessageCircle, Share2, ImageIcon, ChevronLeft, ChevronRight, Volume2, X } from 'lucide-react';
 import { format } from 'date-fns';
 import { ar } from 'date-fns/locale';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useSpeech } from '../hooks/useSpeech';
 import logo from '../assets/logo.png';
 
 export const NewsDetails: React.FC = () => {
@@ -15,6 +16,7 @@ export const NewsDetails: React.FC = () => {
   const [news, setNews] = useState<NewsItem | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentIndex, setCurrentIndex] = useState(0);
+  const { speak, stop, isReading } = useSpeech();
 
   useEffect(() => {
     const loadNewsItem = async () => {
@@ -42,6 +44,18 @@ export const NewsDetails: React.FC = () => {
     const url = window.location.href;
     const text = news?.title || '';
     window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`, '_blank');
+  };
+
+  const handleReadArticle = (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (news) {
+      const cleanContent = news.content
+        .replace(/لمزيد من التفاصيل/g, '')
+        .replace(/اقرأ المزيد/g, '')
+        .replace(/<[^>]*>/g, '');
+      const text = `${news.title}. ${cleanContent}`;
+      speak(text, 'ar-SA');
+    }
   };
 
   const nextImage = () => {
@@ -156,9 +170,28 @@ export const NewsDetails: React.FC = () => {
             </div>
           </div>
 
-          <h1 className="text-2xl md:text-3xl font-bold text-gray-900 mb-6 leading-tight">
-            {news.title}
-          </h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight flex-1">
+              {news.title}
+            </h1>
+            {!isReading ? (
+              <button
+                onClick={handleReadArticle}
+                className="p-3 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors ml-4 shrink-0"
+                title="اقرأ المقال كاملاً"
+              >
+                <Volume2 className="w-6 h-6" />
+              </button>
+            ) : (
+              <button
+                onClick={(e) => { e.preventDefault(); stop(); }}
+                className="p-3 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors ml-4 shrink-0"
+                title="إيقاف القراءة"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            )}
+          </div>
 
           <div 
             className="prose prose-lg max-w-none text-gray-700 leading-relaxed mb-8"
