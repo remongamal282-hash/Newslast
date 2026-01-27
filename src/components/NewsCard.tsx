@@ -4,6 +4,7 @@ import { NewsItem } from '../types/news';
 import { getImageUrl } from '../api/news';
 import { Calendar, User, ArrowRight, Facebook, MessageCircle, Volume2, X } from 'lucide-react';
 import { useSpeech } from '../hooks/useSpeech';
+import { useLanguage } from '../context/LanguageContext';
 
 interface NewsCardProps {
   article: NewsItem;
@@ -11,9 +12,10 @@ interface NewsCardProps {
 
 export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
   const { speak, stop, isReading } = useSpeech();
+  const { language } = useLanguage();
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('ar-EG', {
+    return new Date(dateString).toLocaleDateString(language === 'ar' ? 'ar-EG' : 'en-US', {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
@@ -46,7 +48,8 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
     e.preventDefault();
     e.stopPropagation();
     const text = `${article.title}. ${stripHtml(article.content)}`;
-    speak(text, 'ar-SA');
+    const lang = language === 'ar' ? 'ar-SA' : 'en-US';
+    speak(text, lang);
   };
 
   const handleStopReading = (e: React.MouseEvent) => {
@@ -56,7 +59,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full border border-gray-100 group" dir="rtl">
+    <div className={`bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full border border-gray-100 group`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <Link to={`/news/${article.id}`} className="h-48 overflow-hidden relative block">
         <img 
           src={getImageUrl(article.image)} 
@@ -70,13 +73,13 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
       </Link>
       
       <div className="p-5 flex-1 flex flex-col">
-        <div className="flex items-center text-xs text-gray-500 mb-3 space-x-4 space-x-reverse">
-          <span className="flex items-center">
-            <Calendar className="w-3 h-3 ml-1" />
+        <div className={`flex items-center text-xs text-gray-500 mb-3 space-x-4 ${language === 'ar' ? 'space-x-reverse flex-row-reverse' : ''}`}>
+          <span className={`flex items-center ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+            <Calendar className={`w-3 h-3 ${language === 'ar' ? 'mr-1' : 'ml-1'}`} />
             {formatDate(article.date)}
           </span>
-          <span className="flex items-center truncate max-w-[150px]">
-            <User className="w-3 h-3 ml-1" />
+          <span className={`flex items-center truncate max-w-[150px] ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+            <User className={`w-3 h-3 ${language === 'ar' ? 'mr-1' : 'ml-1'}`} />
             {article.author}
           </span>
         </div>
@@ -91,19 +94,19 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
           {stripHtml(article.content)}
         </p>
         
-        <div className="mt-auto pt-4 border-t border-gray-100 flex justify-between items-center">
+        <div className={`mt-auto pt-4 border-t border-gray-100 flex justify-between items-center ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
           <div className="flex gap-2">
             <button
               onClick={handleFacebookShare}
               className="p-1.5 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
-              title="مشاركة على فيسبوك"
+              title={language === 'ar' ? 'مشاركة على فيسبوك' : 'Share on Facebook'}
             >
               <Facebook className="w-4 h-4" />
             </button>
             <button
               onClick={handleWhatsAppShare}
               className="p-1.5 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
-              title="مشاركة على واتساب"
+              title={language === 'ar' ? 'مشاركة على واتساب' : 'Share on WhatsApp'}
             >
               <MessageCircle className="w-4 h-4" />
             </button>
@@ -111,7 +114,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
               <button
                 onClick={handleReadArticle}
                 className="p-1.5 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"
-                title="اقرأ المقال"
+                title={language === 'ar' ? 'اقرأ المقال' : 'Read article'}
               >
                 <Volume2 className="w-4 h-4" />
               </button>
@@ -119,7 +122,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
               <button
                 onClick={handleStopReading}
                 className="p-1.5 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
-                title="إيقاف القراءة"
+                title={language === 'ar' ? 'إيقاف القراءة' : 'Stop reading'}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -127,9 +130,10 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
           </div>
           <Link 
             to={`/news/${article.id}`}
-            className="flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors group"
+            className={`flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors group ${language === 'ar' ? 'flex-row-reverse' : ''}`}
           >
-            اقرأ المزيد <ArrowRight className="w-4 h-4 mr-1 group-hover:-translate-x-1 transition-transform rotate-180" />
+            {language === 'ar' ? 'اقرأ المزيد' : 'Read More'}
+            <ArrowRight className={`w-4 h-4 group-hover:-translate-x-1 transition-transform ${language === 'ar' ? 'mr-1' : 'ml-1'} ${language === 'ar' ? '' : 'rotate-180'}`} />
           </Link>
         </div>
       </div>

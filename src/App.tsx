@@ -5,15 +5,17 @@ import { Header } from './components/Header';
 import { Footer } from './components/Footer';
 import { Home } from './pages/Home';
 import { NewsDetails } from './pages/NewsDetails';
+import { useLanguage } from './context/LanguageContext';
 import logo from './assets/logo.png';
 
 function App() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { language } = useLanguage();
 
   useEffect(() => {
-    document.documentElement.dir = 'rtl';
-    document.documentElement.lang = 'ar';
+    document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr';
+    document.documentElement.lang = language;
 
     // Handle Redirects from SSR Fallback
     const params = new URLSearchParams(location.search);
@@ -21,10 +23,14 @@ function App() {
     if (redirectUrl) {
       navigate(redirectUrl, { replace: true });
     }
-  }, [location, navigate]);
+  }, [language, location, navigate]);
 
-  const defaultTitle = "شركة مياه الشرب والصرف الصحى بأسيوط والوادى الجديد";
-  const defaultDescription = "الموقع الرسمي لشركة مياه الشرب والصرف الصحى بأسيوط والوادى الجديد - تابع أحدث الأخبار والخدمات.";
+  const defaultTitle = language === 'ar' 
+    ? "شركة مياه الشرب والصرف الصحى بأسيوط والوادى الجديد"
+    : "Water and Wastewater Company of Assiut and New Valley";
+  const defaultDescription = language === 'ar'
+    ? "الموقع الرسمي لشركة مياه الشرب والصرف الصحى بأسيوط والوادى الجديد - تابع أحدث الأخبار والخدمات."
+    : "Official website of the Water and Wastewater Company of Assiut and New Valley - Follow the latest news and services.";
   const logoUrl = new URL(logo, window.location.origin).href;
   const siteUrl = window.location.href;
 

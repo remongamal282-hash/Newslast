@@ -2,6 +2,8 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { fetchNews } from '../api/news';
 import { NewsItem } from '../types/news';
 import { NewsList } from '../components/NewsList';
+import { useLanguage } from '../context/LanguageContext';
+import { useTranslation } from '../hooks/useTranslation';
 import { Loader2 } from 'lucide-react';
 
 export const Home: React.FC = () => {
@@ -9,6 +11,8 @@ export const Home: React.FC = () => {
   const [page, setPage] = useState(1);
   const [loading, setLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
+  const { language } = useLanguage();
+  const { t } = useTranslation();
 
   const loadNews = useCallback(async (pageNum: number) => {
     if (loading) return;
@@ -60,15 +64,15 @@ export const Home: React.FC = () => {
   }, [loading, hasMore, loadNews]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <div className="container mx-auto px-4 py-8" dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <div className="mb-8 text-center">
-        <h2 className="text-3xl font-bold text-gray-800 mb-4"> أحدث الأخبار</h2>
+        <h2 className="text-3xl font-bold text-gray-800 mb-4">{t('latest_news')}</h2>
         <div className="flex flex-col">
             <p className="text-lg md:text-xl font-bold leading-tight">
-              شركة مياه الشرب والصرف الصحى
-
+              {t('company_name')}
             
-              بأسيوط والوادى الجديد
+              {language === 'ar' ? <br /> : ' '}
+              {t('company_location')}
             </p>
           </div>
       </div>
@@ -83,7 +87,7 @@ export const Home: React.FC = () => {
 
       {!hasMore && news.length > 0 && (
         <div className="text-center py-8 text-gray-500">
-          وصلت إلى نهاية الأخبار
+          {t('end_of_news')}
         </div>
       )}
     </div>
