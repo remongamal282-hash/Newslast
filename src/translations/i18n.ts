@@ -2,7 +2,7 @@ export const translations = {
   ar: {
     // Header & Navigation
     logo_text: "بوابة الأخبار",
-    official_website: "",
+   
     
     // Home Page
     latest_news: "أحدث الأخبار",
@@ -27,7 +27,7 @@ export const translations = {
   en: {
     // Header & Navigation
     logo_text: "News Portal",
-    official_website: "",
+    
     
     // Home Page
     latest_news: "Latest News",
@@ -52,4 +52,5 @@ export const translations = {
 };
 
 export type TranslationKey = keyof typeof translations.ar;
+
 
