@@ -61,9 +61,9 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
   return (
     <div className={`bg-white rounded-xl shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 flex flex-col h-full border border-gray-100 group`} dir={language === 'ar' ? 'rtl' : 'ltr'}>
       <Link to={`/news/${article.id}`} className="h-48 overflow-hidden relative block">
-        <img 
-          src={getImageUrl(article.image)} 
-          alt={article.title} 
+        <img
+          src={getImageUrl(article.image)}
+          alt={article.title}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           onError={(e) => {
             (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1504711434969-e33886168f5c?q=80&w=2070&auto=format&fit=crop';
@@ -71,7 +71,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       </Link>
-      
+
       <div className="p-5 flex-1 flex flex-col">
         <div className={`flex items-center text-xs text-gray-500 mb-3 space-x-4 ${language === 'ar' ? 'space-x-reverse flex-row-reverse' : ''}`}>
           <span className={`flex items-center ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
@@ -83,18 +83,25 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
             {article.author}
           </span>
         </div>
-        
+
         <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-2 leading-tight hover:text-blue-600 transition-colors">
           <Link to={`/news/${article.id}`}>
             {article.title}
           </Link>
         </h3>
-        
+
         <p className="text-gray-600 text-sm mb-4 line-clamp-3 flex-1">
           {stripHtml(article.content)}
         </p>
-        
+
         <div className={`mt-auto pt-4 border-t border-gray-100 flex justify-between items-center ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+          <Link
+            to={`/news/${article.id}`}
+            className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors group"
+          >
+            {language === 'ar' ? 'اقرأ المزيد' : 'Read More'}
+            <ArrowRight className={`w-4 h-4 group-hover:${language === 'ar' ? '-translate-x-1' : 'translate-x-1'} transition-transform ${language === 'ar' ? 'rotate-180' : ''}`} />
+          </Link>
           <div className="flex gap-2">
             <button
               onClick={handleFacebookShare}
@@ -128,13 +135,6 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
               </button>
             )}
           </div>
-          <Link 
-            to={`/news/${article.id}`}
-            className={`flex items-center text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors group ${language === 'ar' ? 'flex-row-reverse' : ''}`}
-          >
-            {language === 'ar' ? 'اقرأ المزيد' : 'Read More'}
-            <ArrowRight className={`w-4 h-4 group-hover:-translate-x-1 transition-transform ${language === 'ar' ? 'mr-1' : 'ml-1'} ${language === 'ar' ? '' : 'rotate-180'}`} />
-          </Link>
         </div>
       </div>
     </div>

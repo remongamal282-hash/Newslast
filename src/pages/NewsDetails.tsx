@@ -77,7 +77,7 @@ export const NewsDetails: React.FC = () => {
   const pageTitle = news ? `${news.title} - ${t('site_title')}` : t('read_more');
   const pageDescription = news ? news.content.substring(0, 150) + '...' : t('site_description');
   const pageUrl = window.location.href;
-  
+
   // Image logic: News Image -> Logo -> Fallback
   const newsImageUrl = news?.image ? getImageUrl(news.image) : undefined;
   const logoUrl = new URL(logo, window.location.origin).href;
@@ -135,16 +135,16 @@ export const NewsDetails: React.FC = () => {
                 transition={{ duration: 0.3 }}
               />
             </AnimatePresence>
-            
+
             {news.news_images.length > 1 && (
               <>
-                <button 
+                <button
                   onClick={prevImage}
                   className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                 >
                   <ChevronLeft className="w-6 h-6" />
                 </button>
-                <button 
+                <button
                   onClick={nextImage}
                   className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/70 text-white p-2 rounded-full transition-colors opacity-0 group-hover:opacity-100"
                 >
@@ -175,51 +175,59 @@ export const NewsDetails: React.FC = () => {
             </div>
           </div>
 
-          <div className={`flex items-center justify-between mb-6 ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight flex-1">
+          <div className="mb-6">
+            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 leading-tight">
               {news.title}
             </h1>
-            {!isReading ? (
-              <button
-                onClick={handleReadArticle}
-                className={`p-3 rounded-full bg-blue-600 text-white hover:bg-blue-700 transition-colors shrink-0 ${language === 'ar' ? 'mr-4' : 'ml-4'}`}
-                title={language === 'ar' ? 'اقرأ المقال كاملاً' : 'Read article'}
-              >
-                <Volume2 className="w-6 h-6" />
-              </button>
-            ) : (
-              <button
-                onClick={(e) => { e.preventDefault(); stop(); }}
-                className={`p-3 rounded-full bg-red-600 text-white hover:bg-red-700 transition-colors shrink-0 ${language === 'ar' ? 'mr-4' : 'ml-4'}`}
-                title={language === 'ar' ? 'إيقاف القراءة' : 'Stop reading'}
-              >
-                <X className="w-6 h-6" />
-              </button>
-            )}
           </div>
 
-          <div 
+          <div
             className="prose prose-lg max-w-none text-gray-700 leading-relaxed mb-8"
             dangerouslySetInnerHTML={{ __html: cleanContent }}
           />
 
           <div className="flex items-center justify-between pt-6 border-t border-gray-100">
+            <Link
+              to="/"
+              className="inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors"
+            >
+              {language === 'ar' ? 'العودة للأخبار' : 'Back to News'}
+              <ArrowRight className={`w-4 h-4 ${language === 'ar' ? 'mr-2 rotate-180' : 'ml-2'}`} />
+            </Link>
+
             <div className="flex gap-3">
-              <button 
+              <button
                 onClick={handleFacebookShare}
                 className="p-2 rounded-full bg-blue-50 text-blue-600 hover:bg-blue-100 transition-colors"
                 title={language === 'ar' ? 'مشاركة على فيسبوك' : 'Share on Facebook'}
               >
                 <Facebook className="w-5 h-5" />
               </button>
-              <button 
+              <button
                 onClick={handleWhatsAppShare}
                 className="p-2 rounded-full bg-green-50 text-green-600 hover:bg-green-100 transition-colors"
                 title={language === 'ar' ? 'مشاركة على واتساب' : 'Share on WhatsApp'}
               >
                 <MessageCircle className="w-5 h-5" />
               </button>
-              <button 
+              {!isReading ? (
+                <button
+                  onClick={handleReadArticle}
+                  className="p-2 rounded-full bg-purple-50 text-purple-600 hover:bg-purple-100 transition-colors"
+                  title={language === 'ar' ? 'اقرأ المقال' : 'Read article'}
+                >
+                  <Volume2 className="w-5 h-5" />
+                </button>
+              ) : (
+                <button
+                  onClick={(e) => { e.preventDefault(); stop(); }}
+                  className="p-2 rounded-full bg-red-50 text-red-600 hover:bg-red-100 transition-colors"
+                  title={language === 'ar' ? 'إيقاف القراءة' : 'Stop reading'}
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              )}
+              <button
                 onClick={() => {
                   if (navigator.share) {
                     navigator.share({
@@ -235,14 +243,6 @@ export const NewsDetails: React.FC = () => {
                 <Share2 className="w-5 h-5" />
               </button>
             </div>
-
-            <Link 
-              to="/" 
-              className={`inline-flex items-center text-blue-600 hover:text-blue-800 font-medium transition-colors ${language === 'ar' ? 'flex-row-reverse' : ''}`}
-            >
-              {language === 'ar' ? 'العودة للأخبار' : 'Back to News'}
-              <ArrowRight className={`w-4 h-4 ${language === 'ar' ? 'mr-2 rotate-180' : 'ml-2'}`} />
-            </Link>
           </div>
         </div>
       </div>
