@@ -41,7 +41,7 @@ export const Navbar: React.FC = () => {
               }`}
             >
               <Home className={`w-4 h-4 ${language === 'ar' ? 'ml-2' : 'mr-2'} shrink-0`} />
-              {t('official_website')}
+             
             </a>
           </div>
         </div>
@@ -49,3 +49,4 @@ export const Navbar: React.FC = () => {
     </nav>
   );
 };
+
