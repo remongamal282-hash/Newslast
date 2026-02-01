@@ -2,9 +2,13 @@ import { NewsItem, NewsImage } from '../types/news';
 
 // Use Vercel Proxy to avoid CORS
 // Use Vercel Proxy to avoid CORS
-const TARGET_URL = '/api/proxy/news';
-// const TARGET_URL = 'https://backend.ascww.org/api/news'; // OLD
-const IMAGE_BASE_URL = '/api/proxy/news/image/';
+// const TARGET_URL = '/api/proxy/news';
+// const IMAGE_BASE_URL = '/api/proxy/news/image/';
+
+// For cPanel deployment, use direct API URL since proxy won't work
+// For Vercel, use /api/proxy/ which is configured in vercel.json
+const TARGET_URL = 'https://backend.ascww.org/api/news';
+const IMAGE_BASE_URL = 'https://backend.ascww.org/api/news/image/';
 
 // List of proxies to try in order
 // We use multiple proxies to increase the chance of success
