@@ -8,9 +8,10 @@ import { useLanguage } from '../context/LanguageContext';
 
 interface NewsCardProps {
   article: NewsItem;
+  isHome?: boolean;
 }
 
-export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
+export const NewsCard: React.FC<NewsCardProps> = ({ article, isHome }) => {
   const { speak, stop, isReading } = useSpeech();
   const { language } = useLanguage();
 
@@ -94,7 +95,7 @@ export const NewsCard: React.FC<NewsCardProps> = ({ article }) => {
           {stripHtml(article.content)}
         </p>
 
-        <div className={`mt-auto pt-4 border-t border-gray-100 flex justify-between items-center ${language === 'ar' ? 'flex-row-reverse' : ''}`}>
+        <div className={`mt-auto pt-4 border-t border-gray-100 flex justify-between items-center ${language === 'ar' || isHome ? 'flex-row-reverse' : ''}`}>
           <Link
             to={`/news/${article.id}`}
             className="flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-800 transition-colors group"
