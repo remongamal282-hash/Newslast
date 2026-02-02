@@ -1,11 +1,14 @@
 {
-  "name": "News",
+  "name": "news-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
     "build": "vite build",
+    "build:prod": "vite build --mode production",
+    "postbuild": "node scripts/generate-static-pages.js",
+    "generate-pages": "node scripts/generate-static-pages.js",
     "preview": "vite preview",
     "test": "playwright test"
   },
@@ -14,6 +17,7 @@
     "cannon-es": "^0.20.0",
     "clsx": "^2.1.0",
     "date-fns": "^4.1.0",
+    "dotenv": "^17.2.3",
     "framer-motion": "^11.0.8",
     "gsap": "^3.13.0",
     "http-proxy-middleware": "^3.0.5",

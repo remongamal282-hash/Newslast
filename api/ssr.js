@@ -4,11 +4,12 @@ import path from 'path';
 export default async function handler(request, response) {
     const { id } = request.query;
 
-    // Configuration
-    const API_URL = 'https://backend.ascww.org/api/news';
-    const IMAGE_BASE_URL = 'https://backend.ascww.org/api/news/image/';
-    const PROD_SITE_URL = 'https://' + process.env.VERCEL_URL;
-    const SITE_URL = process.env.VERCEL_URL ? PROD_SITE_URL : 'http://localhost:3000';
+    // Configuration - Use Environment Variables
+    const API_BASE_URL = process.env.VITE_API_BASE_URL || 'https://backend.ascww.org/api';
+    const API_URL = `${API_BASE_URL}/news`;
+    const IMAGE_BASE_URL = `${API_BASE_URL}/news/image/`;
+    const SITE_URL = process.env.VITE_SITE_URL ||
+        (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173');
 
     // Default Meta Data
     const defaultMeta = {
