@@ -78,9 +78,12 @@ export const NewsDetails: React.FC = () => {
   const pageDescription = news ? news.content.substring(0, 150) + '...' : t('site_description');
   const pageUrl = window.location.href;
 
+  // Get site URL from environment or current location
+  const siteUrl = import.meta.env.VITE_SITE_URL || window.location.origin;
+
   // Image logic: News Image -> Logo -> Fallback
   const newsImageUrl = news?.image ? getImageUrl(news.image) : undefined;
-  const logoUrl = new URL(logo, window.location.origin).href;
+  const logoUrl = `${siteUrl}/logo.png`;
   const ogImage = newsImageUrl || logoUrl;
 
   if (loading) {

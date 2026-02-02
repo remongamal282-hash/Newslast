@@ -9,9 +9,12 @@ export default defineConfig({
       '/api/proxy': {
         target: 'https://backend.ascww.org/api',
         changeOrigin: true,
-        secure: false, // Ignore self-signed or invalid certs just in case
+        secure: false,
         rewrite: (path) => path.replace(/^\/api\/proxy/, ''),
       },
     },
+  },
+  build: {
+    outDir: 'dist',
   },
 })

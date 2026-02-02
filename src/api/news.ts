@@ -1,10 +1,9 @@
 import { NewsItem, NewsImage } from '../types/news';
 
-// Use Vercel Proxy to avoid CORS
-// Use Vercel Proxy to avoid CORS
-const TARGET_URL = '/api/proxy/news';
-// const TARGET_URL = 'https://backend.ascww.org/api/news'; // OLD
-const IMAGE_BASE_URL = '/api/proxy/news/image/';
+// API Configuration from environment variables
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'https://backend.ascww.org/api';
+const TARGET_URL = `${API_BASE_URL}/news`;
+const IMAGE_BASE_URL = `${API_BASE_URL}/news/image/`;
 
 // List of proxies to try in order
 // We use multiple proxies to increase the chance of success
