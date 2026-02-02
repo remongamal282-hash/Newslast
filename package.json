@@ -1,5 +1,5 @@
 {
-  "name": "News",
+  "name": "news-app",
   "private": true,
   "version": "0.0.0",
   "type": "module",
@@ -7,6 +7,8 @@
     "dev": "vite --host",
     "build": "vite build",
     "build:prod": "vite build --mode production",
+    "postbuild": "node scripts/generate-static-pages.js",
+    "generate-pages": "node scripts/generate-static-pages.js",
     "preview": "vite preview",
     "test": "playwright test"
   },
