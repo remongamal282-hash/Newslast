@@ -11,40 +11,66 @@ export default async function handler(request, response) {
     const SITE_URL = process.env.VITE_SITE_URL ||
         (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173');
 
-    // List of proxies to try (mirrors src/api/news.ts)
+    // List of proxies to try
+    // We prioritize keeping the original structure but routed through a proxy
     const PROXIES = [
         'https://api.codetabs.com/v1/proxy?quest=',
         'https://corsproxy.io/?',
-        'https://api.allorigins.win/raw?url=',
         'https://thingproxy.freeboard.io/fetch/',
     ];
 
-    // Helper to fetch with proxy fallback
-    const fetchWithProxy = async (url) => {
-        // 1. Try direct fetch first
-        try {
-            console.log(`[SSR] Fetching direct: ${url}`);
-            const response = await fetch(url, {
-                headers: { 'User-Agent': 'Vercel-SSR-Function' }
-            });
-            if (response.ok) return response;
-            console.warn(`[SSR] Direct fetch failed: ${response.status}`);
-        } catch (e) {
-            console.warn(`[SSR] Direct fetch error:`, e.message);
-        }
-
-        // 2. Try proxies
-        for (const proxy of PROXIES) {
-            try {
-                const proxyUrl = `${proxy}${encodeURIComponent(url)}`;
-                console.log(`[SSR] Trying proxy: ${proxy}`);
-                const response = await fetch(proxyUrl);
-                if (response.ok) return response;
-            } catch (e) {
-                console.warn(`[SSR] Proxy ${proxy} failed:`, e.message);
+    /**
+     * Tries to fetch from multiple sources in parallel (Direct + Proxies)
+     * Returns the first successful response.
+     */
+    const fetchNewsData = async () => {
+        const fetchOptions = {
+            headers: {
+                'User-Agent': 'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
+                'Accept': 'application/json'
             }
+        };
+
+        const promises = [];
+
+        // 1. Direct Fetch
+        promises.push(
+            fetch(API_URL, fetchOptions)
+                .then(res => {
+                    if (!res.ok) throw new Error(`Direct failed: ${res.status}`);
+                    return res.json();
+                })
+        );
+
+        // 2. Proxy Fetches (Add a few reliable ones)
+        PROXIES.forEach(proxy => {
+            const proxyUrl = `${proxy}${encodeURIComponent(API_URL)}`;
+            promises.push(
+                fetch(proxyUrl, fetchOptions)
+                    .then(res => {
+                        if (!res.ok) throw new Error(`Proxy ${proxy} failed: ${res.status}`);
+                        return res.json();
+                    })
+            );
+        });
+
+        // Race them! First one to resolve successfully wins.
+        try {
+            return await Promise.any(promises);
+        } catch (error) {
+            console.error('[SSR] All fetch attempts failed:', error.errors);
+            throw new Error('Failed to fetch news from any source');
         }
-        throw new Error('All connection attempts (direct + proxies) failed');
+    };
+
+    /**
+     * Wraps an image URL in a public caching proxy to ensure visibility
+     * even if the origin server blocks bots/crawlers.
+     */
+    const proxifyImage = (imageUrl) => {
+        // wsrv.nl is a reliable, free image proxy/CDN (formerly images.weserv.nl)
+        // We assume the imageUrl is absolute.
+        return `https://wsrv.nl/?url=${encodeURIComponent(imageUrl)}&w=1200&output=jpg`;
     };
 
     // Default Meta Data
@@ -58,11 +84,7 @@ export default async function handler(request, response) {
     let meta = defaultMeta;
 
     try {
-        // 1. Fetch News Data using robust fetch
-        const apiRes = await fetchWithProxy(API_URL);
-
-        // We assume fetchWithProxy only returns OK responses or throws
-        const newsList = await apiRes.json();
+        const newsList = await fetchNewsData();
         const newsItem = newsList.find(item => item.id == id);
 
         if (newsItem) {
@@ -74,12 +96,19 @@ export default async function handler(request, response) {
                 .replace(/\s+/g, ' ')
                 .trim();
 
+            const originalImageUrl = newsItem.news_images && newsItem.news_images.length > 0
+                ? IMAGE_BASE_URL + (newsItem.news_images[0].path.startsWith('/') ? newsItem.news_images[0].path.slice(1) : newsItem.news_images[0].path)
+                : defaultMeta.image;
+
+            // USE PROXIED IMAGE for Og Tags to bypass backend blocking
+            const finalImage = originalImageUrl !== defaultMeta.image
+                ? proxifyImage(originalImageUrl)
+                : defaultMeta.image;
+
             meta = {
                 title: newsItem.title,
                 description: cleanDescription,
-                image: newsItem.news_images && newsItem.news_images.length > 0
-                    ? IMAGE_BASE_URL + (newsItem.news_images[0].path.startsWith('/') ? newsItem.news_images[0].path.slice(1) : newsItem.news_images[0].path)
-                    : defaultMeta.image,
+                image: finalImage,
                 url: `${SITE_URL}/news/${id}`
             };
         } else {
