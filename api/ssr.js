@@ -11,6 +11,42 @@ export default async function handler(request, response) {
     const SITE_URL = process.env.VITE_SITE_URL ||
         (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : 'http://localhost:5173');
 
+    // List of proxies to try (mirrors src/api/news.ts)
+    const PROXIES = [
+        'https://api.codetabs.com/v1/proxy?quest=',
+        'https://corsproxy.io/?',
+        'https://api.allorigins.win/raw?url=',
+        'https://thingproxy.freeboard.io/fetch/',
+    ];
+
+    // Helper to fetch with proxy fallback
+    const fetchWithProxy = async (url) => {
+        // 1. Try direct fetch first
+        try {
+            console.log(`[SSR] Fetching direct: ${url}`);
+            const response = await fetch(url, {
+                headers: { 'User-Agent': 'Vercel-SSR-Function' }
+            });
+            if (response.ok) return response;
+            console.warn(`[SSR] Direct fetch failed: ${response.status}`);
+        } catch (e) {
+            console.warn(`[SSR] Direct fetch error:`, e.message);
+        }
+
+        // 2. Try proxies
+        for (const proxy of PROXIES) {
+            try {
+                const proxyUrl = `${proxy}${encodeURIComponent(url)}`;
+                console.log(`[SSR] Trying proxy: ${proxy}`);
+                const response = await fetch(proxyUrl);
+                if (response.ok) return response;
+            } catch (e) {
+                console.warn(`[SSR] Proxy ${proxy} failed:`, e.message);
+            }
+        }
+        throw new Error('All connection attempts (direct + proxies) failed');
+    };
+
     // Default Meta Data
     const defaultMeta = {
         title: "شركة مياه الشرب والصرف الصحي بأسيوط والوادي الجديد",
@@ -22,40 +58,41 @@ export default async function handler(request, response) {
     let meta = defaultMeta;
 
     try {
-        // 1. Fetch News Data
-        const apiRes = await fetch(API_URL, {
-            headers: { 'User-Agent': 'Vercel-SSR-Function' }
-        });
+        // 1. Fetch News Data using robust fetch
+        const apiRes = await fetchWithProxy(API_URL);
 
-        if (apiRes.ok) {
-            const newsList = await apiRes.json();
-            const newsItem = newsList.find(item => item.id == id);
+        // We assume fetchWithProxy only returns OK responses or throws
+        const newsList = await apiRes.json();
+        const newsItem = newsList.find(item => item.id == id);
 
-            if (newsItem) {
-                // Clean description by stripping HTML tags
-                const rawDescription = newsItem.description || defaultMeta.description;
-                const cleanDescription = rawDescription
-                    .replace(/<[^>]*>/g, '') // Remove all HTML tags
-                    .replace(/&nbsp;/g, ' ')
-                    .replace(/\s+/g, ' ')
-                    .trim();
+        if (newsItem) {
+            // Clean description by stripping HTML tags
+            const rawDescription = newsItem.description || defaultMeta.description;
+            const cleanDescription = rawDescription
+                .replace(/<[^>]*>/g, '') // Remove all HTML tags
+                .replace(/&nbsp;/g, ' ')
+                .replace(/\s+/g, ' ')
+                .trim();
 
-                meta = {
-                    title: newsItem.title,
-                    description: cleanDescription,
-                    image: newsItem.news_images && newsItem.news_images.length > 0
-                        ? IMAGE_BASE_URL + (newsItem.news_images[0].path.startsWith('/') ? newsItem.news_images[0].path.slice(1) : newsItem.news_images[0].path)
-                        : defaultMeta.image,
-                    url: `${SITE_URL}/news/${id}`
-                };
-            } else {
-                meta.title = `News Not Found: ${id}`;
-            }
+            meta = {
+                title: newsItem.title,
+                description: cleanDescription,
+                image: newsItem.news_images && newsItem.news_images.length > 0
+                    ? IMAGE_BASE_URL + (newsItem.news_images[0].path.startsWith('/') ? newsItem.news_images[0].path.slice(1) : newsItem.news_images[0].path)
+                    : defaultMeta.image,
+                url: `${SITE_URL}/news/${id}`
+            };
         } else {
-            console.error('Failed to fetch news data:', apiRes.status);
-            meta.title = `API Error: ${apiRes.status}`;
+            console.warn(`[SSR] News ID ${id} not found in list`);
+            meta.title = `News Not Found: ${id}`;
         }
 
+    } catch (error) {
+        console.error('[SSR] Failed to fetch news data:', error);
+        // Keep default meta
+    }
+
+    try {
         // 2. Try to get index.html
         let html = null;
 
