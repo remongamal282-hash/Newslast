@@ -19,9 +19,15 @@ VITE_SITE_URL=https://your-actual-domain.com
 npm run build
 ```
 
-### 3️⃣ رفع مجلد `dist`
-- ارفع **محتويات** مجلد `dist` (ليس المجلد نفسه) على السيرفر
-- المكان: `public_html` أو `www` أو `htdocs`
+### 3️⃣ الرفع على السيرفر
+⚠️ **للمشاركة الصحيحة (Facebook/WhatsApp)، يجب تشغيل سيرفر Node.js.**
+لا يكفي رفع مجلد `dist` فقط.
+
+#### راجع ملف `DEPLOYMENT.md` للحصول على الخطوات التفصيلية لـ cPanel أو VPS.
+باختصار:
+1. ارفع ملفات المشروع و `server.js`.
+2. ثبت Dependencies (`npm install`).
+3. شغل التطبيق باستخدام Node.js (`node server.js`).
 
 ---
 

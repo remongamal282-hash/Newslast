@@ -41,41 +41,66 @@
    vercel --prod
    ```
 
-### الخيار 2: الرفع على سيرفر خاص (cPanel / VPS)
+### الخيار 2: الرفع على سيرفر خاص (cPanel / VPS) مع دعم Node.js 🚀
 
-1. **Build المشروع:**
+⚠️ **مهم جداً:** للحصول على Meta Tags وتفاصيل الخبر عند المشاركة، **يجب** تشغيل التطبيق كـ Node.js Server وليس مجرد رفع ملفات HTML.
+
+#### إذا كنت تستخدم cPanel:
+
+1. **اذهب إلى "Setup Node.js App" في لوحة التحكم.**
+2. **أنشئ تطبيق جديد:**
+   - **Node.js Version:** اختر 18 أو 20.
+   - **Application Mode:** Production.
+   - **Application Root:** المسار الذي سترفع فيه الملفات (مثلاً `news-app`).
+   - **Application URL:** رابط موقعك.
+   - **Application Startup File:** `server.js`
+3. **ارفع ملفات المشروع:**
+   - ارفع **كل الملفات** ما عدا `node_modules`.
+   - تأكد من وجود `server.js`, `package.json`, وملف `.env.production`.
+4. **تثبيت الحزم (Dependencies):**
+   - في واجهة Node.js App، اضغط على "Run NPM Install".
+5. **Build المشروع:**
+   - شغل الأمر `npm run build:prod` عبر Terminal في cPanel أو عبر SSH.
+   - أو يمكنك رفع مجلد `dist` جاهزاً من جهازك (بعد عمل Build محلياً).
+6. **التشغيل:**
+   - اضغط "Restart" للتطبيق.
+
+#### إذا كنت تستخدم VPS (Ubuntu/Linux):
+
+1. **تثبيت Node.js & PM2:**
    ```bash
-   npm run build
+   curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+   sudo apt-get install -y nodejs
+   sudo npm install -g pm2
    ```
 
-2. **ضبط Environment Variables:**
-   - قم بنسخ ملف `.env.production.example` إلى `.env.production`
-   - قم بتعديل `VITE_SITE_URL` ليكون رابط موقعك الفعلي
-   - مثال:
-     ```
-     VITE_API_BASE_URL=https://backend.ascww.org/api
-     VITE_SITE_URL=https://www.your-domain.com
-     ```
-
-3. **Build مرة أخرى بعد ضبط المتغيرات:**
+2. **رفع المشروع وعمل Build:**
    ```bash
-   npm run build
+   # بعد رفع الملفات
+   npm install
+   npm run build:prod
    ```
 
-4. **رفع مجلد `dist` على السيرفر:**
-   - ارفع محتويات مجلد `dist` إلى public_html أو www
+3. **تشغيل السيرفر باستخدام PM2:**
+   ```bash
+   pm2 start server.js --name "news-app"
+   pm2 save
+   pm2 startup
+   ```
 
-5. **ضبط .htaccess (مهم جداً):**
-   تأكد أن ملف `.htaccess` موجود في public_html ويحتوي على:
-   ```apache
-   <IfModule mod_rewrite.c>
-     RewriteEngine On
-     RewriteBase /
-     RewriteRule ^index\.html$ - [L]
-     RewriteCond %{REQUEST_FILENAME} !-f
-     RewriteCond %{REQUEST_FILENAME} !-d
-     RewriteRule . /index.html [L]
-   </IfModule>
+4. **إعداد Nginx كـ Reverse Proxy (إذا لزم الأمر):**
+   ```nginx
+   server {
+       server_name news.ascww.org;
+       location / {
+           proxy_pass http://localhost:3000;
+           proxy_http_version 1.1;
+           proxy_set_header Upgrade $http_upgrade;
+           proxy_set_header Connection 'upgrade';
+           proxy_set_header Host $host;
+           proxy_cache_bypass $http_upgrade;
+       }
+   }
    ```
 
 ---
